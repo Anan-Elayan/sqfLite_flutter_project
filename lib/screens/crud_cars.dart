@@ -25,16 +25,22 @@ class _CrudCarsState extends State<CrudCars> {
     _initializeDatabase();
   }
 
+  // to initialize the local database and open it
   void _initializeDatabase() async {
     try {
       await db.initDatabase();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to initialize database')),
+        SnackBar(
+          content: Text(
+            'Failed to initialize database',
+          ),
+        ),
       );
     }
   }
 
+  // this methode return list of cars from local data base with status is saved;
   Future<void> _retrieveSavedCars() async {
     try {
       List<Map<String, dynamic>> data = await db.retrievedCard(status: 'saved');
@@ -43,16 +49,23 @@ class _CrudCarsState extends State<CrudCars> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ReadCars(cars: savedCars),
+          builder: (context) => ReadCars(
+            cars: savedCars,
+          ),
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to retrieve saved cars')),
+        SnackBar(
+          content: Text(
+            'Failed to retrieve saved cars',
+          ),
+        ),
       );
     }
   }
 
+  // this methode call when the user clicked on button show all cars with status is confirmed;
   Future<void> _retrieveConfirmedCars() async {
     try {
       List<Map<String, dynamic>> data =
@@ -67,11 +80,16 @@ class _CrudCarsState extends State<CrudCars> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to retrieve confirmed cars')),
+        SnackBar(
+          content: Text(
+            'Failed to retrieve confirmed cars',
+          ),
+        ),
       );
     }
   }
 
+  // this methode to delete the car;
   Future<void> _deleteCar() async {
     try {
       var car = await db.getCarByID(carIdDeleted);
@@ -80,8 +98,8 @@ class _CrudCarsState extends State<CrudCars> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Car with ID $carIdDeleted deleted')),
         );
-        Navigator.pop(context); // Close the dialog
-        _retrieveSavedCars(); // Refresh the list after deletion
+        Navigator.pop(context);
+        _retrieveSavedCars(); // refresh cars list after deleted
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cannot delete a confirmed car')),
@@ -95,6 +113,7 @@ class _CrudCarsState extends State<CrudCars> {
     }
   }
 
+  // this methode to update car;
   Future<void> _updateCar(String id) async {
     try {
       var car = await db.getCarByID(id);
@@ -114,17 +133,26 @@ class _CrudCarsState extends State<CrudCars> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cannot update a confirmed car')),
+          SnackBar(
+            content: Text(
+              'Cannot update a confirmed car',
+            ),
+          ),
         );
-        Navigator.pop(context); // Close the dialog
+        Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update car')),
+        SnackBar(
+          content: Text(
+            'Failed to update car',
+          ),
+        ),
       );
     }
   }
 
+  // this methode call depend on update or delete to show content dialog and call above methode;
   void _showCarIdDialog(String action) {
     showDialog(
       context: context,
@@ -132,7 +160,7 @@ class _CrudCarsState extends State<CrudCars> {
         return AlertDialog(
           title: Text("Enter your car ID to $action"),
           content: TextField(
-            decoration: InputDecoration(hintText: "Enter car ID"),
+            decoration: const InputDecoration(hintText: "Enter car ID"),
             keyboardType: TextInputType.number,
             onChanged: (value) {
               if (action == 'Update') {
@@ -145,16 +173,16 @@ class _CrudCarsState extends State<CrudCars> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
                 if (action == 'Update') {
-                  _updateCar(carIdUpdate); // Update the car
+                  _updateCar(carIdUpdate);
                 } else {
-                  _deleteCar(); // Perform delete
+                  _deleteCar();
                 }
               },
               child: Text("$action Now"),
@@ -200,7 +228,7 @@ class _CrudCarsState extends State<CrudCars> {
                 onPressed: () {
                   _showCarIdDialog('Update');
                 },
-                child: Text(
+                child: const Text(
                   "Update Car",
                   style: TextStyle(fontSize: 20),
                 ),
