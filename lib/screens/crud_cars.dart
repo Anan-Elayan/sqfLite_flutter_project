@@ -26,72 +26,143 @@ class _CrudCarsState extends State<CrudCars> {
   }
 
   void _initializeDatabase() async {
-    await db.initDatabase();
+    try {
+      await db.initDatabase();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to initialize database')),
+      );
+    }
   }
 
   Future<void> _retrieveSavedCars() async {
-    List<Map<String, dynamic>> data = await db.retrievedCard(status: 'saved');
-    List<Cars> savedCars = data.map((carMap) => Cars.fromMap(carMap)).toList();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ReadCars(cars: savedCars),
-      ),
-    );
+    try {
+      List<Map<String, dynamic>> data = await db.retrievedCard(status: 'saved');
+      List<Cars> savedCars =
+          data.map((carMap) => Cars.fromMap(carMap)).toList();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ReadCars(cars: savedCars),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to retrieve saved cars')),
+      );
+    }
   }
 
   Future<void> _retrieveConfirmedCars() async {
-    List<Map<String, dynamic>> data =
-        await db.retrievedCard(status: 'confirmed');
-    List<Cars> confirmedCars =
-        data.map((carMap) => Cars.fromMap(carMap)).toList();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SendToDB(cars: confirmedCars),
-      ),
-    );
+    try {
+      List<Map<String, dynamic>> data =
+          await db.retrievedCard(status: 'confirmed');
+      List<Cars> confirmedCars =
+          data.map((carMap) => Cars.fromMap(carMap)).toList();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SendToDB(cars: confirmedCars),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to retrieve confirmed cars')),
+      );
+    }
   }
 
   Future<void> _deleteCar() async {
-    var car = await db.getCarByID(carIdDeleted);
-    if (car != null && car['status'] != 'confirmed') {
-      await db.deleteCar(carIdDeleted);
+    try {
+      var car = await db.getCarByID(carIdDeleted);
+      if (car != null && car['status'] != 'confirmed') {
+        await db.deleteCar(carIdDeleted);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Car with ID $carIdDeleted deleted')),
+        );
+        Navigator.pop(context); // Close the dialog
+        _retrieveSavedCars(); // Refresh the list after deletion
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot delete a confirmed car')),
+        );
+        Navigator.pop(context); // Close the dialog
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Car with ID $carIdDeleted deleted')),
+        SnackBar(content: Text('Failed to delete car')),
       );
-      Navigator.pop(context); // Close the dialog
-      _retrieveSavedCars(); // Refresh the list after deletion
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot delete a confirmed car')),
-      );
-      Navigator.pop(context); // Close the dialog
     }
   }
 
   Future<void> _updateCar(String id) async {
-    var car = await db.getCarByID(id);
-    if (car != null && car['status'] != 'confirmed') {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => UpdateCars(
-            car: Cars(
-              id: car['id'],
-              price: car['price'],
-              name: car['name'],
-              color: car['color'],
-              status: car['status'],
+    try {
+      var car = await db.getCarByID(id);
+      if (car != null && car['status'] != 'confirmed') {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => UpdateCars(
+              car: Cars(
+                id: car['id'],
+                price: car['price'],
+                name: car['name'],
+                color: car['color'],
+                status: car['status'],
+              ),
             ),
           ),
-        ),
-      );
-    } else {
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cannot update a confirmed car')),
+        );
+        Navigator.pop(context); // Close the dialog
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cannot update a confirmed car')),
+        SnackBar(content: Text('Failed to update car')),
       );
-      Navigator.pop(context); // Close the dialog
     }
+  }
+
+  void _showCarIdDialog(String action) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter your car ID to $action"),
+          content: TextField(
+            decoration: InputDecoration(hintText: "Enter car ID"),
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              if (action == 'Update') {
+                carIdUpdate = value;
+              } else {
+                carIdDeleted = value;
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (action == 'Update') {
+                  _updateCar(carIdUpdate); // Update the car
+                } else {
+                  _deleteCar(); // Perform delete
+                }
+              },
+              child: Text("$action Now"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -127,35 +198,7 @@ class _CrudCarsState extends State<CrudCars> {
               ),
               TextButton(
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text("Enter your car ID to Update"),
-                        content: TextField(
-                          decoration: InputDecoration(hintText: "Enter car ID"),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            carIdUpdate = value;
-                          },
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(); // Close the dialog
-                            },
-                            child: Text("Cancel"),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              _updateCar(carIdUpdate); // Update the car
-                            },
-                            child: const Text("Update Now"),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                  _showCarIdDialog('Update');
                 },
                 child: Text(
                   "Update Car",
@@ -164,35 +207,7 @@ class _CrudCarsState extends State<CrudCars> {
               ),
               TextButton(
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text("Enter your car ID to delete"),
-                        content: TextField(
-                          decoration: InputDecoration(hintText: "Enter car ID"),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            carIdDeleted = value;
-                          },
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(); // Close the dialog
-                            },
-                            child: Text("Cancel"),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              _deleteCar(); // Perform delete
-                            },
-                            child: Text("Delete Car"),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                  _showCarIdDialog('Delete');
                 },
                 child: const Text(
                   "Delete Car",

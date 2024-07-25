@@ -109,12 +109,26 @@ class _CreateNewCarState extends State<CreateNewCar> {
                       );
                       await db.insertToDataBase(obj);
                       print("Clicked on button 'Create Now'");
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Successfully"),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              content: const Text('Cars added Successfully!'),
+                              actions: [
+                                TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text("Ok"))
+                              ],
+                            );
+                          });
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   const SnackBar(
+                      //     content: Text("Successfully"),
+                      //     duration: Duration(seconds: 2),
+                      //   ),
+                      // );
                       priceController.clear();
                       colorController.clear();
                       nameController.clear();
@@ -131,12 +145,26 @@ class _CreateNewCarState extends State<CreateNewCar> {
                       );
                       await db.insertToDataBase(obj);
                       print("Clicked on button 'Create Now'");
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Successfully"),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              content: const Text('Cars added Successfully!'),
+                              actions: [
+                                TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text("Ok"))
+                              ],
+                            );
+                          });
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   const SnackBar(
+                      //     content: Text("Successfully"),
+                      //     duration: Duration(seconds: 2),
+                      //   ),
+                      // );
                       priceController.clear();
                       colorController.clear();
                       nameController.clear();
