@@ -8,6 +8,9 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // my Phone : 192.168.88.9:4000
+  // Emulator : 10.0.2.2:4000
+
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
@@ -16,3 +19,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+//192.168.68.137:4000 my devise

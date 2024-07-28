@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../model/cars.dart';
 import '../servises/database.dart';
@@ -32,7 +31,6 @@ class _SendToDB extends State<SendToDB> {
     super.initState();
   }
 
-  // Method to send car data to the database
   Future<void> _sendToDatabase() async {
     setState(() {
       _isSyncing = true;
@@ -53,7 +51,7 @@ class _SendToDB extends State<SendToDB> {
 
       for (var car in widget.cars) {
         final response = await http.post(
-          Uri.parse('http://192.168.88.9:4000/insertIntoCars'),
+          Uri.parse('http://192.168.68.137:4000/insertIntoCars'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'name': car.name,
@@ -107,7 +105,6 @@ class _SendToDB extends State<SendToDB> {
     });
   }
 
-  // Show a dialog when there's no internet connection
   void _showNoInternetDialog() {
     showDialog(
       context: context,
@@ -129,7 +126,6 @@ class _SendToDB extends State<SendToDB> {
     );
   }
 
-  // Show a dialog when cars already exist in the database
   void _showCarAlreadyExistsDialog() {
     showDialog(
       context: context,
@@ -151,10 +147,8 @@ class _SendToDB extends State<SendToDB> {
     );
   }
 
-  // Generate a PDF file with the car data
   Future<File> _generatePdf(List<Cars> cars) async {
     final pdf = pw.Document();
-
     pdf.addPage(
       pw.Page(build: (pw.Context context) {
         return pw.Padding(
@@ -162,11 +156,14 @@ class _SendToDB extends State<SendToDB> {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('Cars Data',
-                  style: pw.TextStyle(
-                      fontSize: 36,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.blue900)),
+              pw.Text(
+                'Cars Data',
+                style: pw.TextStyle(
+                  fontSize: 36,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.blue900,
+                ),
+              ),
               pw.SizedBox(height: 10),
               pw.Text(
                   'Generated on: ${DateTime.now().toLocal().toString().split(' ')[0]}',
@@ -200,15 +197,22 @@ class _SendToDB extends State<SendToDB> {
                             fontWeight: pw.FontWeight.bold,
                             color: PdfColors.blue900)),
                     pw.Text(
-                        'Date: ${DateTime.now().toLocal().toString().split(' ')[0]}',
-                        style: pw.TextStyle(
-                            fontSize: 18, color: PdfColors.grey800)),
+                      'Date: ${DateTime.now().toLocal().toString().split(' ')[0]}',
+                      style: pw.TextStyle(
+                        fontSize: 18,
+                        color: PdfColors.grey800,
+                      ),
+                    ),
                   ],
                 ),
                 pw.SizedBox(height: 30),
-                pw.Text('Car Details',
-                    style: pw.TextStyle(
-                        fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                pw.Text(
+                  'Car Details',
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
                 pw.SizedBox(height: 10),
                 pw.Container(
                   padding: pw.EdgeInsets.all(15),
@@ -219,17 +223,29 @@ class _SendToDB extends State<SendToDB> {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('Name: ${car.name}',
-                          style: pw.TextStyle(
-                              fontSize: 18, color: PdfColors.black)),
+                      pw.Text(
+                        'Name: ${car.name}',
+                        style: const pw.TextStyle(
+                          fontSize: 18,
+                          color: PdfColors.black,
+                        ),
+                      ),
                       pw.SizedBox(height: 10),
-                      pw.Text('Price: ${car.price}',
-                          style: pw.TextStyle(
-                              fontSize: 18, color: PdfColors.black)),
+                      pw.Text(
+                        'Price: ${car.price}',
+                        style: const pw.TextStyle(
+                          fontSize: 18,
+                          color: PdfColors.black,
+                        ),
+                      ),
                       pw.SizedBox(height: 10),
-                      pw.Text('Color: ${car.color}',
-                          style: pw.TextStyle(
-                              fontSize: 18, color: PdfColors.black)),
+                      pw.Text(
+                        'Color: ${car.color}',
+                        style: const pw.TextStyle(
+                          fontSize: 18,
+                          color: PdfColors.black,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -250,25 +266,49 @@ class _SendToDB extends State<SendToDB> {
     return pdfFile;
   }
 
-  // Share the generated PDF file
   Future<void> _sharePdf() async {
     try {
       final cars = widget.cars;
       final pdfFile = await _generatePdf(cars);
       final pdfFilePath = pdfFile.path;
 
-      if (await canLaunchUrl(Uri.parse(
-          "whatsapp://send?text=Please find the attached PDF file."))) {
-        await Share.shareFiles([pdfFilePath], text: 'Cars Data');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('WhatsApp not installed on your device')),
-        );
-      }
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Share PDF'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(Icons.email),
+                  title: Text('Email'),
+                  onTap: () async {
+                    await Share.shareFiles(
+                      [pdfFilePath],
+                      text: 'Cars Data via email.',
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.call),
+                  title: Text('WhatsApp'),
+                  onTap: () async {
+                    await Share.shareFiles([pdfFilePath],
+                        text: 'Cars Data via WhatsApp.');
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      );
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred while sharing the PDF')),
+        SnackBar(content: Text('An error occurred while generating PDF')),
       );
     }
   }
@@ -277,39 +317,27 @@ class _SendToDB extends State<SendToDB> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Sync Page"),
+        title: Text('Cars'),
         actions: [
           IconButton(
             onPressed: _sendToDatabase,
-            icon: _isSyncing
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Icon(Icons.network_check_outlined),
+            icon: const Icon(Icons.sync),
+          ),
+          IconButton(
+            onPressed: _sharePdf,
+            icon: const Icon(Icons.share),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: widget.cars.isEmpty
-                ? const Center(child: Text("No confirmed cars to display"))
-                : ListView.builder(
-                    itemCount: widget.cars.length,
-                    itemBuilder: (context, index) {
-                      final car = widget.cars[index];
-                      return ListTile(
-                        title: Text('Name: ${car.name}'),
-                        subtitle:
-                            Text('Price: ${car.price} - Color: ${car.color}'),
-                      );
-                    },
-                  ),
-          ),
-          if (allDataSynced)
-            ElevatedButton(
-              onPressed: _sharePdf,
-              child: const Text('Share PDF'),
-            ),
-        ],
+      body: ListView.builder(
+        itemCount: widget.cars.length,
+        itemBuilder: (context, index) {
+          final car = widget.cars[index];
+          return ListTile(
+            title: Text(car.name),
+            subtitle: Text('${car.price} - ${car.color}'),
+          );
+        },
       ),
     );
   }
