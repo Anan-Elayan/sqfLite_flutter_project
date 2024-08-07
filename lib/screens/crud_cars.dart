@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_data_base/screens/read_cars.dart';
-import 'package:flutter_data_base/screens/send_to_bd.dart';
-import 'package:flutter_data_base/screens/update_cars.dart';
+import 'package:provider/provider.dart';
 
 import '../model/cars.dart';
 import '../servises/database.dart';
 import 'create_new_car.dart';
+import 'login_state.dart';
+import 'read_cars.dart';
+import 'send_to_bd.dart';
+import 'update_cars.dart';
 
 class CrudCars extends StatefulWidget {
   const CrudCars({super.key});
@@ -18,20 +20,30 @@ class _CrudCarsState extends State<CrudCars> {
   final DataBase db = DataBase();
   late String carIdDeleted;
   late String carIdUpdate;
+  late String userColor;
 
   @override
   void initState() {
     super.initState();
     _initializeDatabase();
+    print('initState called');
   }
 
-  // to initialize the local database and open it
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final loginState = Provider.of<LoginState>(context);
+    // this to access to login screen
+    userColor = loginState.color;
+    print('user Color from didChangeDependencies method ${userColor}');
+  }
+
   void _initializeDatabase() async {
     try {
       await db.initDatabase();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             'Failed to initialize database',
           ),
@@ -40,10 +52,13 @@ class _CrudCarsState extends State<CrudCars> {
     }
   }
 
-  // this methode return list of cars from local data base with status is saved;
   Future<void> _retrieveSavedCars() async {
     try {
-      List<Map<String, dynamic>> data = await db.retrievedCard(status: 'saved');
+      List<Map<String, dynamic>> data = await db.retrievedCard(
+        status: 'saved',
+        // fetch based on the color passed from login screen
+        color: userColor,
+      );
       List<Cars> savedCars =
           data.map((carMap) => Cars.fromMap(carMap)).toList();
       Navigator.push(
@@ -65,7 +80,6 @@ class _CrudCarsState extends State<CrudCars> {
     }
   }
 
-  // this methode call when the user clicked on button show all cars with status is confirmed;
   Future<void> _retrieveConfirmedCars() async {
     try {
       List<Map<String, dynamic>> data =
@@ -89,7 +103,6 @@ class _CrudCarsState extends State<CrudCars> {
     }
   }
 
-  // this methode to delete the car;
   Future<void> _deleteCar() async {
     try {
       var car = await db.getCarByID(carIdDeleted);
@@ -99,7 +112,7 @@ class _CrudCarsState extends State<CrudCars> {
           SnackBar(content: Text('Car with ID $carIdDeleted deleted')),
         );
         Navigator.pop(context);
-        _retrieveSavedCars(); // refresh cars list after deleted
+        _retrieveSavedCars(); // refresh cars list after deletion
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cannot delete a confirmed car')),
@@ -113,7 +126,6 @@ class _CrudCarsState extends State<CrudCars> {
     }
   }
 
-  // this methode to update car;
   Future<void> _updateCar(String id) async {
     try {
       var car = await db.getCarByID(id);
@@ -152,7 +164,6 @@ class _CrudCarsState extends State<CrudCars> {
     }
   }
 
-  // this methode call depend on update or delete to show content dialog and call above methode;
   void _showCarIdDialog(String action) {
     showDialog(
       context: context,

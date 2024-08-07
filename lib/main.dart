@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_data_base/screens/crud_cars.dart';
+import 'package:flutter_data_base/screens/login_screen.dart';
+import 'package:flutter_data_base/screens/login_state.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => LoginState(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -13,9 +20,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: CrudCars(),
+      home: LoginScreen(),
     );
   }
 }
